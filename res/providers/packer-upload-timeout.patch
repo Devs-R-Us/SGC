@@ -1,0 +1,21 @@
+diff --git a/post-processor/vagrant-cloud/client.go b/post-processor/vagrant-cloud/client.go
+index a66d3eb..b4ab540 100644
+--- a/post-processor/vagrant-cloud/client.go
++++ b/post-processor/vagrant-cloud/client.go
+@@ -9,6 +9,7 @@ import (
+ 	"net/http"
+ 	"net/url"
+ 	"os"
++	"time"
+ 	"strings"
+ )
+ 
+@@ -41,6 +42,8 @@ func (v VagrantCloudClient) New(baseUrl string, token string) *VagrantCloudClien
+ 		client: &http.Client{
+ 			Transport: &http.Transport{
+ 				Proxy: http.ProxyFromEnvironment,
++				ExpectContinueTimeout: 300 * time.Second,
++				ResponseHeaderTimeout: 300 * time.Second,
+ 			},
+ 		},
+ 		BaseURL:     baseUrl,

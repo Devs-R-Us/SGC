@@ -1,0 +1,121 @@
+{
+    "variables": {
+        "box_version": "{{env `VERSION`}}"
+    },
+    "provisioners": [
+        {
+            "type": "shell",
+            "timeout": "120m",
+            "scripts": [
+                "scripts/centos6/yum.sh",
+                "scripts/centos6/base.sh",
+                "scripts/centos6/network.sh"
+            ],
+            "start_retry_timeout": "15m",
+            "expect_disconnect": "true",
+            "only": [
+                "magma-developer-libvirt"
+            ]
+        },
+        {
+            "type": "shell",
+            "timeout": "120m",
+            "scripts": [
+                "scripts/centos6/kernel.sh",
+                "scripts/centos6/vga.sh",
+                "scripts/centos6/virtualbox.sh",
+                "scripts/centos6/parallels.sh",
+                "scripts/centos6/vmware.sh",
+                "scripts/centos6/qemu.sh",
+                "scripts/centos6/postfix.sh",
+                "scripts/centos6/vagrant.sh",
+                "scripts/centos6/sshd.sh",
+                "scripts/centos6/randomness.sh",
+                "scripts/centos6/updatedb.sh",
+                "scripts/centos6/developer.sh",
+                "scripts/centos6/tuning.sh",
+                "scripts/centos6/cleanup.sh"
+            ],
+            "pause_before": "120s",
+            "start_retry_timeout": "15m",
+            "expect_disconnect": "true",
+            "only": [
+                "magma-developer-libvirt"
+            ]
+        },
+        {
+            "scripts": [
+                "scripts/common/motd.sh",
+                "scripts/common/keys.sh",
+                "scripts/common/machine.sh",
+                "scripts/common/leases.sh",
+                "scripts/common/localtime.sh",
+                "scripts/common/zerodisk.sh",
+                "scripts/common/lockout.sh"
+            ],
+            "type": "shell",
+            "timeout": "120m",
+            "start_retry_timeout": "15m",
+            "expect_disconnect": "true"
+        }
+    ],
+    "builders": [
+        {
+            "type": "qemu",
+            "name": "magma-developer-libvirt",
+            "vm_name": "magma-developer-libvirt",
+            "output_directory": "output/magma-developer-libvirt",
+            "qemu_binary": "qemu-system-x86_64",
+            "boot_wait": "20s",
+            "boot_keygroup_interval": "1s",
+            "boot_command": [
+                "<tab> ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/magma.centos6.developer.ks<enter><wait>"
+            ],
+            "format": "qcow2",
+            "disk_size": "131072",
+            "disk_discard": "unmap",
+            "disk_detect_zeroes": "on",
+            "disk_cache": "unsafe",
+            "disk_image": false,
+            "disk_compression": true,
+            "disk_interface": "virtio-scsi",
+            "net_device": "virtio-net",
+            "cpus": 4,
+            "memory": 4096,
+            "http_directory": "http",
+            "headless": true,
+            "iso_url": "https://vault.centos.org/6.10/isos/x86_64/CentOS-6.10-x86_64-minimal.iso",
+            "iso_checksum": "sha256:7c0dee2a0494dabd84809b72ddb4b761f9ef92b78a506aef709b531c54d30770",
+            "ssh_username": "root",
+            "ssh_password": "magma",
+            "ssh_port": 22,
+            "ssh_timeout": "3600s",
+            "shutdown_command": "sudo -S shutdown -P now"
+        }
+    ],
+    "post-processors": [
+        [
+            {
+                "type": "vagrant",
+                "compression_level": 9,
+                "keep_input_artifact": false,
+                "vagrantfile_template": "tpl/developer.rb",
+                "output": "output/{{build_name}}-{{user `box_version`}}.box",
+                "include": [
+                    "tpl/lavabit/info.json"
+                ],
+                "only": [
+                    "magma-developer-libvirt"
+                ]
+            },
+            {
+                "type": "checksum",
+                "checksum_types": [
+                    "sha256"
+                ],
+                "keep_input_artifact": false,
+                "output": "output/{{build_name}}-{{user `box_version`}}.box.sha256"
+            }
+        ]
+    ]
+}
